@@ -1,113 +1,102 @@
 # U2-CatchMagic-RSS
 
-中文 | [English](#english)
+基于 `u2_scripts/catch_magic.py` 修改，专为 Vertex、autobrr 等集成管理工具设计的 U2 自动追魔脚本。
 
-把 U2 魔法种子列表转换成 RSS，供 Vertex / autobrr 等工具订阅。
+不同于原版通过本地下载链路处理任务，这个版本统一改为**生成 RSS 订阅源**，由 Vertex 接管后续下载流程，跨平台部署和管理都更方便。
 
-## 功能
+## 🌟 特点
 
-- 扫描 U2 魔法页面
-- 根据脚本规则筛选可用项目
-- 输出标准 RSS：`/rss.xml`
-- 不直接下载实体 `.torrent`
+- **RSS 驱动**
+  - 不直接下载物理种子文件
+  - 输出标准 RSS 2.0 内容
+  - 由 Vertex 统一接管下载、删种、分类等动作
 
-## 部署
+- **保留核心逻辑**
+  - 延续原脚本的主要筛选思路
+  - 支持按做种人数、发布时间、魔法类型等条件筛选
+
+- **容器友好**
+  - 仓库已提供 `Dockerfile`、`docker-compose.yml`
+  - 新设备部署更直接
+
+- **内置 HTTP 服务**
+  - 启动后直接提供 `/rss.xml`
+  - Vertex、autobrr 等工具可直接订阅
+
+## 🚀 部署指南（推荐）
+
+### 1. 准备文件
+
+本目录已经包含部署所需文件：
+
+- `catch_magic.py`
+- `requirements.txt`
+- `Dockerfile`
+- `docker-compose.yml`
+- `.env.example`
+
+### 2. 配置参数
+
+复制配置模板并编辑：
 
 ```bash
 cp .env.example .env
-# 编辑 .env
+```
+
+重点参数：
+
+- `U2_COOKIE`
+  - 你的 U2 cookie
+  - 支持填写 `nexusphp_u2=...` 或只填值
+- `UID`
+  - 你的 U2 UID
+- `API_TOKEN`
+  - 推荐填写，稳定性更好
+- `RSS_HTTP_PORT`
+  - RSS 服务端口，默认 `8787`
+- `INTERVAL`
+  - 扫描周期
+
+### 3. 构建并运行
+
+推荐使用 Docker Compose：
+
+```bash
 docker compose up -d --build
 ```
 
-如果修改了 `RSS_HTTP_PORT`，`docker-compose.yml` 会自动按同端口映射。
+启动后访问：
 
-默认访问地址：
+- `http://你的IP:8787/`
+- `http://你的IP:8787/rss.xml`
 
-- `http://<IP>:8787/`
-- `http://<IP>:8787/rss.xml`
+如果你修改了 `RSS_HTTP_PORT`，`docker-compose.yml` 会自动按同端口映射。
 
-## Vertex 使用
+## 🔗 在 Vertex 中使用
 
-- 在 Vertex 新建 RSS 订阅
-- RSS 地址填写：`http://<IP>:8787/rss.xml`
-- 勾选“推送种子文件”
-- 由 Vertex 使用你的 U2 凭据发起下载
+- 在 Vertex 的 RSS 订阅页面点击添加
+- 地址填写：`http://你的IP:8787/rss.xml`
+- 勾选 **“推送种子文件”**
+- 建议填写 U2 cookie，避免拉取种子时出现权限问题
 
-## 重要变量
+## ❗️注意事项
 
-- `U2_COOKIE`: U2 cookie，支持直接填 `nexusphp_u2=...` 或只填值
-- `UID`: 你的 U2 UID
-- `API_TOKEN`: 可选；不填时直接抓网页
-- `INTERVAL`: 扫描周期，单位秒
-- `MAX_SEEDER_NUM`: 最大做种人数限制
-- `DOWNLOAD_OLD` / `DOWNLOAD_NEW`: 旧种 / 新种开关
-- `RSS_HTTP_PORT`: RSS 服务端口
-
-## 数据目录
-
-- `./data/catch_magic.log`
-- `./data/catch_magic.data.txt`
-- `./data/rss.xml`
-
-## 说明
-
-- 这个项目更适合与 Vertex 配套使用
-- 脚本负责筛选和输出 RSS，不直接接管下载器
+- Vertex 即使不使用“抓取免费”逻辑，也建议填写 cookie
+- 如果当前没有命中项目，`rss.xml` 可能暂时没有 item，Vertex 可能提示异常，一般可忽略
+- 若无法访问，请检查 VPS / 防火墙是否放行对应端口
 - 如需代理，可在 `.env` 中配置 `HTTP_PROXY` / `HTTPS_PROXY`
+
+## 📝 免责声明
+
+本脚本仅供技术交流与学习使用，请务必遵守 U2 站点相关规则。因使用本脚本导致的账号风险、违规或封禁等后果，请自行承担。
 
 ---
 
-## English
+## English Summary
 
-Convert U2 promotion / magic entries into an RSS feed for Vertex, autobrr, or similar tools.
+An RSS-based U2 promotion / magic tracker adapted from `u2_scripts/catch_magic.py`.
 
-## Features
-
-- Scans the U2 promotion / magic page
-- Filters entries based on the script rules
-- Exposes a standard RSS feed at `/rss.xml`
-- Does not directly download `.torrent` files
-
-## Deployment
-
-```bash
-cp .env.example .env
-# edit .env
-docker compose up -d --build
-```
-
-If you change `RSS_HTTP_PORT`, `docker-compose.yml` will map the same port automatically.
-
-Default URLs:
-
-- `http://<IP>:8787/`
-- `http://<IP>:8787/rss.xml`
-
-## Using with Vertex
-
-- Create a new RSS subscription in Vertex
-- Set the feed URL to `http://<IP>:8787/rss.xml`
-- Enable torrent pushing in Vertex
-- Let Vertex use your U2 credentials to fetch downloads
-
-## Important variables
-
-- `U2_COOKIE`: U2 cookie; accepts either `nexusphp_u2=...` or the raw value
-- `UID`: your U2 user ID
-- `API_TOKEN`: optional; if empty, the script falls back to page scraping
-- `INTERVAL`: scan interval in seconds
-- `MAX_SEEDER_NUM`: maximum seeder threshold
-- `DOWNLOAD_OLD` / `DOWNLOAD_NEW`: old / new promotion switches
-- `RSS_HTTP_PORT`: HTTP port for the RSS service
-
-## Data files
-
-- `./data/catch_magic.log`
-- `./data/catch_magic.data.txt`
-- `./data/rss.xml`
-
-## Notes
-
-- This project works best when paired with Vertex
-- The script focuses on filtering and RSS generation, not download-client control
-- Proxy settings can be provided through `HTTP_PROXY` / `HTTPS_PROXY`
+- Generates RSS instead of directly handling torrent downloads
+- Designed to work with Vertex / autobrr
+- Keeps the core filtering logic while exposing `/rss.xml`
+- Recommended deployment: `docker compose up -d --build`

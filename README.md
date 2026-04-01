@@ -1,41 +1,47 @@
 # u2-rss-suite
 
-中文 | [English](#english)
+面向 U2 使用场景的 RSS 工具合集，统一采用：
 
-一个面向 U2 场景的 RSS 工具合集仓库，当前包含：
+`U2 页面 -> RSS 输出 -> Vertex -> 下载器`
 
+也就是说，这个仓库里的脚本都负责“发现目标”和“生成 RSS”，后续下载、删种、分类、限速等动作统一交给 Vertex 之类的集成管理工具处理。
+
+## 当前包含
+
+### 1. U2-CatchMagic-RSS
+
+基于 `u2_scripts/catch_magic.py` 改造，用于追踪 U2 魔法种子并输出 RSS。
+
+适合：
+- 追魔法
+- 按魔法规则筛选
+- 让 Vertex 统一接管下载
+
+目录：
 - `u2-catchmagic-rss/`
-  - 扫描 U2 魔法种子页面
-  - 生成 RSS，供 Vertex / autobrr 订阅
+
+### 2. U2-NewTorrents-RSS
+
+基于 `u2_scripts/download_new_torrents.py` 改造，用于筛选 U2 新种并输出 RSS。
+
+适合：
+- 抓新种
+- 按置顶 / 免费 / 做种情况自动筛选
+- 不再直接写入 qB 监控目录
+
+目录：
 - `u2-newtorrents-rss/`
-  - 扫描 U2 新种页面
-  - 生成 RSS，统一交给 Vertex 控制后续下载
 
-推荐链路：
+## 🌟 设计思路
 
-`U2 页面 -> RSS 服务 -> Vertex -> qBittorrent / 其他下载器`
+- **RSS 驱动**：脚本不直接管理下载器，统一输出 RSS
+- **便于集成**：适合配合 Vertex / autobrr / 其他 RSS 工具
+- **Docker 优先**：默认按容器部署整理，新设备迁移更方便
+- **保留核心逻辑**：尽量继承原脚本筛选思路，只把输出链路改成 RSS
 
-这样脚本只负责“发现”和“输出 RSS”，下载、分类、限速、客户端管理都放在 Vertex。
+## 🚀 快速部署
 
-## 仓库结构
-
-```text
-u2-rss-suite/
-├── u2-catchmagic-rss/
-│   ├── catch_magic.py
-│   ├── Dockerfile
-│   ├── docker-compose.yml
-│   └── .env.example
-└── u2-newtorrents-rss/
-    ├── download_new_torrents.py
-    ├── Dockerfile
-    ├── docker-compose.yml
-    └── .env.example
-```
-
-## 快速开始
-
-克隆仓库：
+先拉取仓库：
 
 ```bash
 git clone https://github.com/ccrichard3/u2-rss-suite.git
@@ -60,102 +66,35 @@ cp .env.example .env
 docker compose up -d --build
 ```
 
-## 已整理内容
+## 🔗 与 Vertex 配合使用
 
-- 已移除真实 cookie / passkey / 私密配置
-- 统一改成环境变量配置
-- 已容器化，便于新设备部署
-- 每个子项目都带 `.env.example`、`docker-compose.yml`、`README.md`
+- 在 Vertex 中添加 RSS 订阅
+- 订阅地址填对应服务的 `/rss.xml`
+- 勾选“推送种子文件”
+- 下载行为统一让 Vertex 处理
 
-## 适合的使用方式
+## ❗️注意事项
 
-- 想抓魔法种子：用 `u2-catchmagic-rss`
-- 想抓符合规则的新种：用 `u2-newtorrents-rss`
-- 想统一控制下载行为：让 Vertex 订阅 RSS，再由 Vertex 推送给下载器
+- `u2-newtorrents-rss` 默认首次运行只建立基线，所以 RSS 可能暂时为空
+- 某些情况下如果 RSS 暂时没有 item，Vertex 可能提示订阅异常，通常可忽略
+- 建议在 Vertex 中填写 U2 cookie，避免拉取种子时出现权限问题
+- 发布或分享前请确认 `.env`、`data/` 等私密内容没有提交
 
-## 注意事项
+## 📝 免责声明
 
-- `u2-newtorrents-rss` 默认首次运行只建立基线，RSS 可能暂时为空
-- 两个服务都不会直接替你管理下载器配置，推荐和 Vertex 配合使用
-- 发布到 GitHub 前请确认 `.env` 和 `data/` 没有被提交
+本仓库仅供技术交流与学习使用，请务必遵守相关站点规则。因使用脚本产生的账号风险、权限问题或其他后果，请自行承担。
 
 ---
 
-## English
+## English Summary
 
-A collection of U2-oriented RSS tools, currently including:
+This repository contains U2-oriented RSS tools adapted from `u2_scripts`.
 
-- `u2-catchmagic-rss/`
-  - Scans the U2 promotion / magic page
-  - Exposes matched entries as RSS for Vertex / autobrr
-- `u2-newtorrents-rss/`
-  - Scans the U2 new torrents page
-  - Exposes matched entries as RSS so Vertex can handle downloads
+- `u2-catchmagic-rss`: track U2 promotion / magic entries and expose them as RSS
+- `u2-newtorrents-rss`: track U2 new torrents and expose them as RSS
 
 Recommended flow:
 
-`U2 pages -> RSS service -> Vertex -> qBittorrent / other download clients`
+`U2 pages -> RSS feeds -> Vertex -> download client`
 
-This keeps the scripts focused on discovery and RSS generation, while download control stays in Vertex.
-
-## Repository layout
-
-```text
-u2-rss-suite/
-├── u2-catchmagic-rss/
-│   ├── catch_magic.py
-│   ├── Dockerfile
-│   ├── docker-compose.yml
-│   └── .env.example
-└── u2-newtorrents-rss/
-    ├── download_new_torrents.py
-    ├── Dockerfile
-    ├── docker-compose.yml
-    └── .env.example
-```
-
-## Quick start
-
-Clone the repository:
-
-```bash
-git clone https://github.com/ccrichard3/u2-rss-suite.git
-cd u2-rss-suite
-```
-
-Deploy `U2-CatchMagic-RSS`:
-
-```bash
-cd u2-catchmagic-rss
-cp .env.example .env
-# edit .env
-docker compose up -d --build
-```
-
-Deploy `U2-NewTorrents-RSS`:
-
-```bash
-cd ../u2-newtorrents-rss
-cp .env.example .env
-# edit .env
-docker compose up -d --build
-```
-
-## What has been cleaned up
-
-- Real cookies / passkeys / private values were removed
-- Configuration is now environment-variable based
-- Both tools are containerized for easier deployment
-- Each subproject includes `.env.example`, `docker-compose.yml`, and its own README
-
-## Recommended usage
-
-- Use `u2-catchmagic-rss` for promotion / magic tracking
-- Use `u2-newtorrents-rss` for rule-based new torrent tracking
-- Let Vertex subscribe to the RSS feeds and handle download actions centrally
-
-## Notes
-
-- `u2-newtorrents-rss` skips existing items on first run by default, so the RSS feed may be empty at first
-- The scripts are designed to generate RSS, not to replace your download manager setup
-- Make sure `.env` and `data/` are not committed before pushing changes
+These scripts are designed for integration tools such as Vertex. They focus on filtering and RSS generation, while downstream download actions are handled centrally by Vertex.

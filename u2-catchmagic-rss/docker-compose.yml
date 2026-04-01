@@ -1,0 +1,11 @@
+services:
+  u2-catchmagic-rss:
+    build: .
+    container_name: u2-catchmagic-rss
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "${RSS_HTTP_PORT:-8787}:${RSS_HTTP_PORT:-8787}"
+    volumes:
+      - ./data:/app/data

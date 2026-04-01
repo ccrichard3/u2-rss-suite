@@ -1,0 +1,11 @@
+services:
+  u2-newtorrents-rss:
+    build: .
+    container_name: u2-newtorrents-rss
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "${RSS_HTTP_PORT:-8788}:${RSS_HTTP_PORT:-8788}"
+    volumes:
+      - ./data:/app/data
